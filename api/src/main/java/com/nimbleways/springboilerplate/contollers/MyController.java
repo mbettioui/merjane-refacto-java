@@ -10,6 +10,7 @@ import com.nimbleways.springboilerplate.services.implementations.ProductService;
 import java.time.LocalDate;
 import java.util.Set;
 
+import com.nimbleways.springboilerplate.domain.model.ProductType;
 import com.nimbleways.springboilerplate.domain.exception.OrderNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,30 +39,35 @@ public class MyController {
         log.debug("Processing order {}", order);
         Set<Product> products = order.getItems();
         for (Product p : products) {
-            if (p.getType().equals("NORMAL")) {
-                if (p.getAvailable() > 0) {
-                    p.setAvailable(p.getAvailable() - 1);
-                    productRepository.save(p);
-                } else {
-                    int leadTime = p.getLeadTime();
-                    if (leadTime > 0) {
-                        productService.notifyDelay(leadTime, p);
+            switch (ProductType.from(p.getType())) {
+                case NORMAL -> {
+                    if (p.getAvailable() > 0) {
+                        p.setAvailable(p.getAvailable() - 1);
+                        productRepository.save(p);
+                    } else {
+                        int leadTime = p.getLeadTime();
+                        if (leadTime > 0) {
+                            productService.notifyDelay(leadTime, p);
+                        }
                     }
                 }
-            } else if (p.getType().equals("SEASONAL")) {
-                if ((LocalDate.now().isAfter(p.getSeasonStartDate()) && LocalDate.now().isBefore(p.getSeasonEndDate())
-                        && p.getAvailable() > 0)) {
-                    p.setAvailable(p.getAvailable() - 1);
-                    productRepository.save(p);
-                } else {
-                    productService.handleSeasonalProduct(p);
+                case SEASONAL -> {
+                    if (LocalDate.now().isAfter(p.getSeasonStartDate())
+                            && LocalDate.now().isBefore(p.getSeasonEndDate())
+                            && p.getAvailable() > 0) {
+                        p.setAvailable(p.getAvailable() - 1);
+                        productRepository.save(p);
+                    } else {
+                        productService.handleSeasonalProduct(p);
+                    }
                 }
-            } else if (p.getType().equals("EXPIRABLE")) {
-                if (p.getAvailable() > 0 && p.getExpiryDate().isAfter(LocalDate.now())) {
-                    p.setAvailable(p.getAvailable() - 1);
-                    productRepository.save(p);
-                } else {
-                    productService.handleExpiredProduct(p);
+                case EXPIRABLE -> {
+                    if (p.getAvailable() > 0 && p.getExpiryDate().isAfter(LocalDate.now())) {
+                        p.setAvailable(p.getAvailable() - 1);
+                        productRepository.save(p);
+                    } else {
+                        productService.handleExpiredProduct(p);
+                    }
                 }
             }
         }
