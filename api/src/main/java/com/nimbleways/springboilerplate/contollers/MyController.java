@@ -1,10 +1,10 @@
 package com.nimbleways.springboilerplate.contollers;
 
 import com.nimbleways.springboilerplate.dto.product.ProcessOrderResponse;
-import com.nimbleways.springboilerplate.entities.Order;
-import com.nimbleways.springboilerplate.entities.Product;
-import com.nimbleways.springboilerplate.repositories.OrderRepository;
-import com.nimbleways.springboilerplate.repositories.ProductRepository;
+import com.nimbleways.springboilerplate.infra.persistence.entity.OrderEntity;
+import com.nimbleways.springboilerplate.infra.persistence.entity.ProductEntity;
+import com.nimbleways.springboilerplate.infra.persistence.repository.OrderRepository;
+import com.nimbleways.springboilerplate.infra.persistence.repository.ProductRepository;
 import com.nimbleways.springboilerplate.services.implementations.ProductService;
 
 import java.time.LocalDate;
@@ -34,11 +34,11 @@ public class MyController {
     @PostMapping("{orderId}/processOrder")
     @ResponseStatus(HttpStatus.OK)
     public ProcessOrderResponse processOrder(@PathVariable Long orderId) {
-        Order order = orderRepository.findById(orderId)
+        OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
         log.debug("Processing order {}", order);
-        Set<Product> products = order.getItems();
-        for (Product p : products) {
+        Set<ProductEntity> products = order.getItems();
+        for (ProductEntity p : products) {
             switch (ProductType.from(p.getType())) {
                 case NORMAL -> {
                     if (p.getAvailable() > 0) {

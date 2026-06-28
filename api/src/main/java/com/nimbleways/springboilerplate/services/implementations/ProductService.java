@@ -5,8 +5,9 @@ import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import com.nimbleways.springboilerplate.entities.Product;
-import com.nimbleways.springboilerplate.repositories.ProductRepository;
+import com.nimbleways.springboilerplate.infra.notification.NotificationService;
+import com.nimbleways.springboilerplate.infra.persistence.entity.ProductEntity;
+import com.nimbleways.springboilerplate.infra.persistence.repository.ProductRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -15,13 +16,13 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final NotificationService notificationService;
 
-    public void notifyDelay(int leadTime, Product p) {
+    public void notifyDelay(int leadTime, ProductEntity p) {
         p.setLeadTime(leadTime);
         productRepository.save(p);
         notificationService.sendDelayNotification(leadTime, p.getName());
     }
 
-    public void handleSeasonalProduct(Product p) {
+    public void handleSeasonalProduct(ProductEntity p) {
         if (LocalDate.now().plusDays(p.getLeadTime()).isAfter(p.getSeasonEndDate())) {
             notificationService.sendOutOfStockNotification(p.getName());
             p.setAvailable(0);
@@ -34,7 +35,7 @@ public class ProductService {
         }
     }
 
-    public void handleExpiredProduct(Product p) {
+    public void handleExpiredProduct(ProductEntity p) {
         if (p.getAvailable() > 0 && p.getExpiryDate().isAfter(LocalDate.now())) {
             p.setAvailable(p.getAvailable() - 1);
             productRepository.save(p);

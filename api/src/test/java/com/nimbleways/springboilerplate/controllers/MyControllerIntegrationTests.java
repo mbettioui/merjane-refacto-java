@@ -1,10 +1,10 @@
 package com.nimbleways.springboilerplate.controllers;
 
-import com.nimbleways.springboilerplate.entities.Order;
-import com.nimbleways.springboilerplate.entities.Product;
-import com.nimbleways.springboilerplate.repositories.OrderRepository;
-import com.nimbleways.springboilerplate.repositories.ProductRepository;
-import com.nimbleways.springboilerplate.services.implementations.NotificationService;
+import com.nimbleways.springboilerplate.infra.notification.NotificationService;
+import com.nimbleways.springboilerplate.infra.persistence.entity.OrderEntity;
+import com.nimbleways.springboilerplate.infra.persistence.entity.ProductEntity;
+import com.nimbleways.springboilerplate.infra.persistence.repository.OrderRepository;
+import com.nimbleways.springboilerplate.infra.persistence.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -33,7 +33,7 @@ public class MyControllerIntegrationTests {
 
     @Test
     void processOrderShouldDecrementStockForNormalProduct() throws Exception {
-        Product p = savedProduct(new Product(null, 15, 30, "NORMAL", "USB Cable", null, null, null));
+        ProductEntity p = savedProduct(new ProductEntity(null, 15, 30, "NORMAL", "USB Cable", null, null, null));
         postOrder(p);
         assertEquals(29, reload(p).getAvailable());
         verifyNoInteractions(notificationService);
@@ -41,14 +41,14 @@ public class MyControllerIntegrationTests {
 
     @Test
     void processOrderShouldNotifyDelayForOutOfStockNormalProduct() throws Exception {
-        Product p = savedProduct(new Product(null, 15, 0, "NORMAL", "USB Dongle Out", null, null, null));
+        ProductEntity p = savedProduct(new ProductEntity(null, 15, 0, "NORMAL", "USB Dongle Out", null, null, null));
         postOrder(p);
         verify(notificationService, times(1)).sendDelayNotification(15, "USB Dongle Out");
     }
 
     @Test
     void processOrderShouldDoNothingForOutOfStockNormalProductWithNoLeadTime() throws Exception {
-        Product p = savedProduct(new Product(null, 0, 0, "NORMAL", "Gadget No Lead", null, null, null));
+        ProductEntity p = savedProduct(new ProductEntity(null, 0, 0, "NORMAL", "Gadget No Lead", null, null, null));
         postOrder(p);
         verifyNoInteractions(notificationService);
     }
@@ -57,7 +57,7 @@ public class MyControllerIntegrationTests {
 
     @Test
     void processOrderShouldDecrementStockForValidExpirableProduct() throws Exception {
-        Product p = savedProduct(new Product(null, 15, 5, "EXPIRABLE", "Fresh Butter",
+        ProductEntity p = savedProduct(new ProductEntity(null, 15, 5, "EXPIRABLE", "Fresh Butter",
                 LocalDate.now().plusDays(10), null, null));
         postOrder(p);
         assertEquals(4, reload(p).getAvailable());
@@ -67,7 +67,7 @@ public class MyControllerIntegrationTests {
     @Test
     void processOrderShouldNotifyExpirationForExpiredProduct() throws Exception {
         LocalDate expiry = LocalDate.now().minusDays(2);
-        Product p = savedProduct(new Product(null, 90, 6, "EXPIRABLE", "Expired Milk", expiry, null, null));
+        ProductEntity p = savedProduct(new ProductEntity(null, 90, 6, "EXPIRABLE", "Expired Milk", expiry, null, null));
         postOrder(p);
         verify(notificationService, times(1)).sendExpirationNotification("Expired Milk", expiry);
         assertEquals(0, reload(p).getAvailable());
@@ -77,7 +77,7 @@ public class MyControllerIntegrationTests {
 
     @Test
     void processOrderShouldDecrementStockForInSeasonProduct() throws Exception {
-        Product p = savedProduct(new Product(null, 5, 10, "SEASONAL", "Watermelon",
+        ProductEntity p = savedProduct(new ProductEntity(null, 5, 10, "SEASONAL", "Watermelon",
                 null, LocalDate.now().minusDays(10), LocalDate.now().plusDays(60)));
         postOrder(p);
         assertEquals(9, reload(p).getAvailable());
@@ -86,7 +86,7 @@ public class MyControllerIntegrationTests {
 
     @Test
     void processOrderShouldNotifyOutOfStockWhenLeadTimeExceedsSeasonEnd() throws Exception {
-        Product p = savedProduct(new Product(null, 10, 0, "SEASONAL", "EndOfSeason",
+        ProductEntity p = savedProduct(new ProductEntity(null, 10, 0, "SEASONAL", "EndOfSeason",
                 null, LocalDate.now().minusDays(5), LocalDate.now().plusDays(5)));
         postOrder(p);
         verify(notificationService, times(1)).sendOutOfStockNotification("EndOfSeason");
@@ -95,7 +95,7 @@ public class MyControllerIntegrationTests {
 
     @Test
     void processOrderShouldNotifyOutOfStockForPreSeasonProduct() throws Exception {
-        Product p = savedProduct(new Product(null, 15, 30, "SEASONAL", "Grapes PreSeason",
+        ProductEntity p = savedProduct(new ProductEntity(null, 15, 30, "SEASONAL", "Grapes PreSeason",
                 null, LocalDate.now().plusDays(180), LocalDate.now().plusDays(240)));
         postOrder(p);
         verify(notificationService, times(1)).sendOutOfStockNotification("Grapes PreSeason");
@@ -104,7 +104,7 @@ public class MyControllerIntegrationTests {
 
     @Test
     void processOrderShouldNotifyDelayForInSeasonOutOfStockSeasonalProduct() throws Exception {
-        Product p = savedProduct(new Product(null, 5, 0, "SEASONAL", "InSeason NoStock",
+        ProductEntity p = savedProduct(new ProductEntity(null, 5, 0, "SEASONAL", "InSeason NoStock",
                 null, LocalDate.now().minusDays(10), LocalDate.now().plusDays(60)));
         postOrder(p);
         verify(notificationService, times(1)).sendDelayNotification(5, "InSeason NoStock");
@@ -119,16 +119,16 @@ public class MyControllerIntegrationTests {
                 .andExpect(status().isNotFound());
     }
 
-    private Product savedProduct(Product p) {
+    private ProductEntity savedProduct(ProductEntity p) {
         return productRepository.save(p);
     }
 
-    private Product reload(Product p) {
+    private ProductEntity reload(ProductEntity p) {
         return productRepository.findById(p.getId()).orElseThrow();
     }
 
-    private void postOrder(Product... products) throws Exception {
-        Order order = new Order();
+    private void postOrder(ProductEntity... products) throws Exception {
+        OrderEntity order = new OrderEntity();
         order.setItems(Set.of(products));
         Long orderId = orderRepository.save(order).getId();
         mockMvc.perform(post("/orders/{orderId}/processOrder", orderId)

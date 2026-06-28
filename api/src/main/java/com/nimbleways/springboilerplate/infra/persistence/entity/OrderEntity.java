@@ -1,4 +1,4 @@
-package com.nimbleways.springboilerplate.entities;
+package com.nimbleways.springboilerplate.infra.persistence.entity;
 
 import lombok.*;
 
@@ -13,7 +13,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "orders")
-public class Order {
+public class OrderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -21,5 +21,5 @@ public class Order {
 
     @ManyToMany
     @JoinTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
-    private Set<Product> items;
+    private Set<ProductEntity> items;
 }

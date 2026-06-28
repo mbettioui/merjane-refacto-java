@@ -1,4 +1,4 @@
-package com.nimbleways.springboilerplate.entities;
+package com.nimbleways.springboilerplate.infra.persistence.entity;
 
 import lombok.*;
 
@@ -12,7 +12,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "products")
-public class Product {
+public class ProductEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

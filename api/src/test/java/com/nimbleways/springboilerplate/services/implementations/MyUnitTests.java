@@ -1,7 +1,8 @@
 package com.nimbleways.springboilerplate.services.implementations;
 
-import com.nimbleways.springboilerplate.entities.Product;
-import com.nimbleways.springboilerplate.repositories.ProductRepository;
+import com.nimbleways.springboilerplate.infra.notification.NotificationService;
+import com.nimbleways.springboilerplate.infra.persistence.entity.ProductEntity;
+import com.nimbleways.springboilerplate.infra.persistence.repository.ProductRepository;
 import com.nimbleways.springboilerplate.utils.Annotations.UnitTest;
 
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ public class MyUnitTests {
     @Test
     public void test() {
         // GIVEN
-        Product product =new Product(null, 15, 0, "NORMAL", "RJ45 Cable", null, null, null);
+        ProductEntity product = new ProductEntity(null, 15, 0, "NORMAL", "RJ45 Cable", null, null, null);
 
         Mockito.when(productRepository.save(product)).thenReturn(product);
 
