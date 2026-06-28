@@ -9,15 +9,16 @@ import com.nimbleways.springboilerplate.infra.persistence.repository.OrderReposi
 import com.nimbleways.springboilerplate.infra.persistence.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AdapterTest {
@@ -55,7 +56,7 @@ class AdapterTest {
         Optional<Order> result = adapter.findById(42L);
 
         assertTrue(result.isPresent());
-        assertEquals(42L, result.get().getId());
+        verify(mapper).toDomain(oe);
     }
 
     @Test
