@@ -1,4 +1,4 @@
-package com.nimbleways.springboilerplate.controllers.advice;
+package com.nimbleways.springboilerplate.infra.ui.web.advice;
 
 import com.nimbleways.springboilerplate.domain.exception.OrderNotFoundException;
 import com.nimbleways.springboilerplate.domain.exception.UnsupportedProductTypeException;
