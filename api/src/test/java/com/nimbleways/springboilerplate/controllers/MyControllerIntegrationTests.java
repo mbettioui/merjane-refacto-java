@@ -112,6 +112,13 @@ public class MyControllerIntegrationTests {
 
     // ----------------------------------------------------------------- helpers
 
+    @Test
+    void processOrder_unknownOrder_returns404() throws Exception {
+        mockMvc.perform(post("/orders/{orderId}/processOrder", 999999L)
+                .contentType("application/json"))
+                .andExpect(status().isNotFound());
+    }
+
     private Product savedProduct(Product p) {
         return productRepository.save(p);
     }

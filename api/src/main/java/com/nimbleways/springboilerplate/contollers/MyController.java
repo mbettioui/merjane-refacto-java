@@ -10,6 +10,7 @@ import com.nimbleways.springboilerplate.services.implementations.ProductService;
 import java.time.LocalDate;
 import java.util.Set;
 
+import com.nimbleways.springboilerplate.domain.exception.OrderNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,8 @@ public class MyController {
     @PostMapping("{orderId}/processOrder")
     @ResponseStatus(HttpStatus.OK)
     public ProcessOrderResponse processOrder(@PathVariable Long orderId) {
-        Order order = orderRepository.findById(orderId).get();
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
         log.debug("Processing order {}", order);
         Set<Product> products = order.getItems();
         for (Product p : products) {
