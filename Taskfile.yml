@@ -1,0 +1,59 @@
+version: '3'
+silent: true
+
+vars:
+  JAVA_MAJOR: '17'
+
+tasks:
+  default:
+    desc: Liste les tâches disponibles
+    cmds: ['task --list']
+
+  _check-java:
+    internal: true
+    preconditions:
+      - sh: 'java -version 2>&1 | grep -qE "\"{{.JAVA_MAJOR}}\."'
+        msg: 'Java {{.JAVA_MAJOR}} requis. Lance: sdk env (cf .sdkmanrc).'
+
+  test:
+    desc: Tests unitaires
+    dir: api
+    deps: [_check-java]
+    cmds: ['./mvnw test']
+
+  it:
+    desc: Tests d integration
+    dir: api
+    deps: [_check-java]
+    cmds: ['./mvnw integration-test']
+
+  verify:
+    desc: Build complet (tests + JaCoCo 80% + PMD) — identique a la CI
+    dir: api
+    deps: [_check-java]
+    cmds: ['./mvnw clean verify']
+
+  pmd:
+    desc: Analyse statique PMD
+    dir: api
+    deps: [_check-java]
+    cmds: ['./mvnw pmd:check']
+
+  run:
+    desc: Lance l application en local
+    dir: api
+    deps: [_check-java]
+    cmds: ['./mvnw spring-boot:run']
+
+  coverage:
+    desc: Ouvre le rapport JaCoCo (necessite un task verify prealable)
+    dir: api
+    preconditions:
+      - sh: 'test -f target/site/jacoco/index.html'
+        msg: "Rapport absent. Lance d abord: task verify"
+    cmds: ['open target/site/jacoco/index.html']
+
+  clean:
+    desc: Nettoie les artefacts de build
+    dir: api
+    cmds: ['./mvnw clean']
